@@ -18,6 +18,7 @@ import java.util.List;
 public class PrincipalSrv extends javax.swing.JFrame {
     private final int PORT = 12345;
     private ServerSocket serverSocket;
+    private List<Socket> listadoClientes;
 
 
     /**
@@ -35,6 +36,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         mensajesTxt = new JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
+        cbEnviarTodos = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
@@ -47,7 +49,13 @@ public class PrincipalSrv extends javax.swing.JFrame {
             }
         });
         getContentPane().add(bIniciar);
-        bIniciar.setBounds(100, 90, 250, 40);
+        bIniciar.setBounds(100, 60, 250, 40);
+        
+        cbEnviarTodos.setFont(new java.awt.Font("Tahoma", 0, 14));
+        cbEnviarTodos.setForeground(new java.awt.Color(0, 0, 0));
+        cbEnviarTodos.setText("Enviar a todos los clientes conectados");
+        getContentPane().add(cbEnviarTodos);
+        cbEnviarTodos.setBounds(90, 110, 300, 17);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(204, 0, 0));
@@ -84,29 +92,35 @@ public class PrincipalSrv extends javax.swing.JFrame {
     }
     
     private void iniciarServidor() {
+        listadoClientes = new ArrayList<>();
         bIniciar.setEnabled(false);
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    
                     InetAddress addr = InetAddress.getLocalHost();
                     serverSocket = new ServerSocket( PORT);
                     mensajesTxt.append("Servidor TCP en ejecución: "+ addr + " ,Puerto " + serverSocket.getLocalPort()+ "\n");
                     while (true) {
                         Socket clientSocket = serverSocket.accept();
+                        listadoClientes.add(clientSocket);
                         new Thread(new Runnable(){
                             public void run(){
                                 try{
                                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                                     mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
-                                    String linea;
-
-
-                                    while ((linea = in.readLine()) != null) {
-                                        mensajesTxt.append("Cliente "+ clientSocket.getPort() + ": " + linea + "\n");
-
-                                        out.println("Mensaje recibido en el server " );
+                                    
+                                    if(cbEnviarTodos.isSelected()){
+                                        for(Socket cliente : listadoClientes){
+                                            BufferedReader in_c = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
+                                            PrintWriter out_c = new PrintWriter(cliente.getOutputStream(), true);
+                                            enviarMensaje(in_c, out_c, cliente);
+                                        }
+                                    }else{
+                                        enviarMensaje(in, out, clientSocket);
                                     }
+                                    
 
                                 } 
                                 catch(IOException ex){
@@ -115,12 +129,23 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                 } 
                                 finally {
                                     try{
+                                        mensajesTxt.append("Cliente desconectado: " + clientSocket.getPort()+ "\n");
                                         clientSocket.close();
                                     }
                                     catch(IOException ex){
                                         mensajesTxt.append("Error cerrando el socket del cliente: " + ex.getMessage() + "\n");
                                         ex.printStackTrace();
                                     } 
+                                    listadoClientes.remove(clientSocket);
+                                }
+                            }
+
+                            private void enviarMensaje(BufferedReader in, PrintWriter out, Socket cliente) throws IOException {
+                                String linea;
+                                while ((linea = in.readLine()) != null) {
+                                    mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
+                                    
+                                    out.println("Mensaje recibido en el server " );
                                 }
                             }
                         }).start();
@@ -138,6 +163,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
 
     // Variables declaration - do not modify
     private javax.swing.JButton bIniciar;
+    private javax.swing.JCheckBox cbEnviarTodos;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextArea mensajesTxt;
     private javax.swing.JScrollPane jScrollPane1;
