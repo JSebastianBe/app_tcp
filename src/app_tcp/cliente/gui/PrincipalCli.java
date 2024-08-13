@@ -13,6 +13,7 @@ import java.net.Socket;
 public class PrincipalCli extends javax.swing.JFrame {
 
     private final int PORT = 12345;
+    private final String HOST = "localhost";
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
@@ -57,7 +58,7 @@ public class PrincipalCli extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(204, 0, 0));
-        jLabel1.setText("CLIENTE TCP : DFRACK");
+        jLabel1.setText("CLIENTE TCP : XXXXX");
         getContentPane().add(jLabel1);
         jLabel1.setBounds(110, 10, 250, 17);
 
@@ -127,8 +128,10 @@ public class PrincipalCli extends javax.swing.JFrame {
     private void conectar() {
         try {
             if (socket == null || socket.isClosed()) {
-                socket = new Socket("localhost", PORT); // Asume que el servidor está en localhost y escucha en el puerto 5555
+                socket = new Socket(HOST, PORT); // Asume que el servidor está en localhost y escucha en el puerto 5555
                 out = new PrintWriter(socket.getOutputStream(), true);
+                mensajesTxt.append("Conectado al servidor: " + socket.getInetAddress() + ":"+ socket.getPort() +"\n");
+                jLabel1.setText("CLIENTE TCP : " + socket.getLocalPort());
             }
             bConectar.setEnabled(false);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));

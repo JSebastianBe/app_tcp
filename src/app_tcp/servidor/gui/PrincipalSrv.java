@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Author: Vinni
@@ -16,9 +18,7 @@ import java.net.Socket;
 public class PrincipalSrv extends javax.swing.JFrame {
     private final int PORT = 12345;
     private ServerSocket serverSocket;
-    private Socket clientSocket;
-    private BufferedReader in;
-    private PrintWriter out;
+
 
     /**
      * Creates new form Principal1
@@ -51,19 +51,19 @@ public class PrincipalSrv extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(204, 0, 0));
-        jLabel1.setText("SERVIDOR TCP : HOEL");
+        jLabel1.setText("SERVIDOR TCP");
         getContentPane().add(jLabel1);
         jLabel1.setBounds(150, 10, 160, 17);
 
         mensajesTxt.setColumns(25);
-        mensajesTxt.setRows(5);
+        mensajesTxt.setRows(20);
 
         jScrollPane1.setViewportView(mensajesTxt);
 
         getContentPane().add(jScrollPane1);
-        jScrollPane1.setBounds(20, 160, 410, 70);
+        jScrollPane1.setBounds(20, 160, 410, 500);
 
-        setSize(new java.awt.Dimension(491, 290));
+        setSize(new java.awt.Dimension(491, 700));
         setLocationRelativeTo(null);
     }// </editor-fold>
 
@@ -82,7 +82,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
     private void bIniciarActionPerformed(java.awt.event.ActionEvent evt) {
         iniciarServidor();
     }
-
+    
     private void iniciarServidor() {
         bIniciar.setEnabled(false);
         new Thread(new Runnable() {
@@ -92,20 +92,45 @@ public class PrincipalSrv extends javax.swing.JFrame {
                     serverSocket = new ServerSocket( PORT);
                     mensajesTxt.append("Servidor TCP en ejecución: "+ addr + " ,Puerto " + serverSocket.getLocalPort()+ "\n");
                     while (true) {
-                        clientSocket = serverSocket.accept();
-                        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                        String linea;
-                        out = new PrintWriter(clientSocket.getOutputStream(), true);
-                        while ((linea = in.readLine()) != null) {
-                            mensajesTxt.append("Cliente: " + linea + "\n");
-                            out.println("Mensaje recibido en el server " );
-                        }
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(new Runnable(){
+                            public void run(){
+                                try{
+                                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                                    mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
+                                    String linea;
 
+
+                                    while ((linea = in.readLine()) != null) {
+                                        mensajesTxt.append("Cliente "+ clientSocket.getPort() + ": " + linea + "\n");
+
+                                        out.println("Mensaje recibido en el server " );
+                                    }
+
+                                } 
+                                catch(IOException ex){
+                                    mensajesTxt.append("Error en la comunicación con el cliente: " + ex.getMessage() + "\n");
+                                    ex.printStackTrace();
+                                } 
+                                finally {
+                                    try{
+                                        clientSocket.close();
+                                    }
+                                    catch(IOException ex){
+                                        mensajesTxt.append("Error cerrando el socket del cliente: " + ex.getMessage() + "\n");
+                                        ex.printStackTrace();
+                                    } 
+                                }
+                            }
+                        }).start();
+                        
                     }
                 } catch (IOException ex) {
                     bIniciar.setEnabled(true);
-                    ex.printStackTrace();
                     mensajesTxt.append("Error en el servidor: " + ex.getMessage() + "\n");
+                    ex.printStackTrace();
+                    
                 }
             }
         }).start();
