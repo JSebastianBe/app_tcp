@@ -42,7 +42,8 @@ public class PrincipalCli extends javax.swing.JFrame {
         mensajeTxt = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         btEnviar = new javax.swing.JButton();
-
+        cPorts = new javax.swing.JComboBox<String>();
+        
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
 
@@ -55,6 +56,13 @@ public class PrincipalCli extends javax.swing.JFrame {
         });
         getContentPane().add(bConectar);
         bConectar.setBounds(260, 40, 210, 40);
+        
+        cPorts.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        cPorts.addItem("12345");
+        cPorts.addItem("12346");
+        cPorts.addItem("12347");
+        getContentPane().add(cPorts);
+        cPorts.setBounds(60, 40, 180, 40);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(204, 0, 0));
@@ -123,17 +131,20 @@ public class PrincipalCli extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea mensajesTxt;
     private JTextField mensajeTxt;
+    private javax.swing.JComboBox<String> cPorts;
     // End of variables declaration
 
     private void conectar() {
         try {
             if (socket == null || socket.isClosed()) {
-                socket = new Socket(HOST, PORT); // Asume que el servidor está en localhost y escucha en el puerto 5555
+                int puerto = Integer.valueOf(cPorts.getSelectedItem().toString());
+                socket = new Socket(HOST, puerto); // Asume que el servidor está en localhost y escucha en el puerto 5555
                 out = new PrintWriter(socket.getOutputStream(), true);
                 mensajesTxt.append("Conectado al servidor: " + socket.getInetAddress() + ":"+ socket.getPort() +"\n");
                 jLabel1.setText("CLIENTE TCP : " + socket.getLocalPort());
             }
             bConectar.setEnabled(false);
+            cPorts.setEnabled(false);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             new Thread(new Runnable() {
                 public void run() {
@@ -149,6 +160,8 @@ public class PrincipalCli extends javax.swing.JFrame {
             }).start();
             System.out.println(out);
         }catch (IOException e){
+            
+            cPorts.setEnabled(true);
             bConectar.setEnabled(true);
             e.printStackTrace();
         }
