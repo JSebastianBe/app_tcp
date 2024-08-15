@@ -113,7 +113,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
                                     if(cbEnviarTodos.isSelected())
                                     {
-                                        
+                                        enviarInfoTodos("Cliente conectado: " + clientSocket.getPort(), clientSocket);
                                         enviarMensajeTodos(clientSocket);
                                     }
                                     else
@@ -161,7 +161,16 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                 }
                             }
                             
-                            
+                            private void enviarInfoTodos(String linea, Socket remitente) throws IOException {
+                                for(Socket destinatario : listadoClientes)
+                                {
+                                    if(destinatario != remitente)
+                                    {
+                                        PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
+                                        out_d.println(linea);
+                                    }   
+                                }
+                            }
 
                             private void enviarMensaje(Socket cliente) throws IOException {
                                 String linea;
