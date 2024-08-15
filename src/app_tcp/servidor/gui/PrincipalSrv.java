@@ -93,13 +93,13 @@ public class PrincipalSrv extends javax.swing.JFrame {
     }
     
     private void iniciarServidor() {
-        listadoClientes = new ArrayList<>();
+        
         bIniciar.setEnabled(false);
         cbEnviarTodos.setEnabled(false);
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    
+                    listadoClientes = new ArrayList<>();
                     InetAddress addr = InetAddress.getLocalHost();
                     int puerto = PORT;
                     if(cbEnviarTodos.isSelected()){
@@ -112,41 +112,39 @@ public class PrincipalSrv extends javax.swing.JFrame {
                         listadoClientes.add(clientSocket);
                         new Thread(new Runnable(){
                             public void run(){
-                                try{
-                                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                                try
+                                {
                                     mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
                                     
-                                    if(cbEnviarTodos.isSelected()){
-                                        for(Socket cliente_rem : listadoClientes){
-                                            BufferedReader in_cr = new BufferedReader(new InputStreamReader(cliente_rem.getInputStream()));
-                                            String linea;
-                                            while ((linea = in_cr.readLine()) != null) {
-                                                mensajesTxt.append("Cliente "+ cliente_rem.getPort() + ": " + linea + "\n");
-
-                                                for(Socket cliente_des : listadoClientes){
-                                                    PrintWriter out_d = new PrintWriter(cliente_des.getOutputStream(), true);
-                                                    out_d.println("Cliente "+ cliente_rem.getPort() + ": " + linea + "\n");
-                                                }
-                                                
-                                            }
+                                    if(cbEnviarTodos.isSelected())
+                                    {
+                                        for(Socket remitentes : listadoClientes)
+                                        {
+                                            BufferedReader in_cr = new BufferedReader(new InputStreamReader(remitentes.getInputStream()));
+                                            enviarMensajeTodos(in_cr, remitentes);
                                         }
-                                    }else{
-                                    enviarMensaje(in, out, clientSocket);
                                     }
-                                    
-
+                                    else
+                                    {
+                                        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                                        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                                        enviarMensaje(in, out, clientSocket);
+                                    }
                                 } 
-                                catch(IOException ex){
+                                catch(IOException ex)
+                                {
                                     mensajesTxt.append("Error en la comunicación con el cliente: " + ex.getMessage() + "\n");
                                     ex.printStackTrace();
                                 } 
-                                finally {
-                                    try{
+                                finally 
+                                {
+                                    try
+                                    {
                                         mensajesTxt.append("Cliente desconectado: " + clientSocket.getPort()+ "\n");
                                         clientSocket.close();
                                     }
-                                    catch(IOException ex){
+                                    catch(IOException ex)
+                                    {
                                         mensajesTxt.append("Error cerrando el socket del cliente: " + ex.getMessage() + "\n");
                                         ex.printStackTrace();
                                     } 
@@ -154,8 +152,25 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                 }
                             }
 
+                            private void enviarMensajeTodos(BufferedReader in, Socket remitente) throws IOException {
+                                String linea;
+                                while ((linea = in.readLine()) != null) {
+                                    mensajesTxt.append("Cliente "+ remitente.getPort() + ": " + linea + "\n");
+                                    
+                                    for(Socket destinatario : listadoClientes){
+                                        PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
+                                        out_d.println("Cliente "+ remitente.getPort() + ": " + linea + "");
+                                    }
+                                    
+                                }
+                            }
+
                             private void enviarMensaje(BufferedReader in, PrintWriter out, Socket cliente) throws IOException {
-                                
+                                String linea;
+                                while ((linea = in.readLine()) != null) {
+                                    mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
+                                    out.println("Cliente "+ cliente.getPort() + ": " + linea + "");
+                                }
                             }
                         }).start();
                         
