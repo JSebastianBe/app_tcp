@@ -135,9 +135,9 @@ public class PrincipalCli extends javax.swing.JFrame {
     // End of variables declaration
 
     private void conectar() {
+        int puerto = Integer.valueOf(cPorts.getSelectedItem().toString());
         try {
             if (socket == null || socket.isClosed()) {
-                int puerto = Integer.valueOf(cPorts.getSelectedItem().toString());
                 socket = new Socket(HOST, puerto); // Asume que el servidor está en localhost y escucha en el puerto 5555
                 out = new PrintWriter(socket.getOutputStream(), true);
                 mensajesTxt.append("Conectado al servidor: " + socket.getInetAddress() + ":"+ socket.getPort() +"\n");
@@ -160,7 +160,7 @@ public class PrincipalCli extends javax.swing.JFrame {
             }).start();
             System.out.println(out);
         }catch (IOException e){
-            
+            mensajesTxt.append("No se puede conectar al servidor: " + HOST + ":"+ puerto + "\n");
             cPorts.setEnabled(true);
             bConectar.setEnabled(true);
             e.printStackTrace();
