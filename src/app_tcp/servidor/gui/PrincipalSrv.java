@@ -2,15 +2,9 @@ package app_tcp.servidor.gui;
 
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 /**
  * Author: Vinni
@@ -18,7 +12,6 @@ import java.util.List;
 public class PrincipalSrv extends javax.swing.JFrame {
     private final int PORT = 12345;
     private ServerSocket serverSocket;
-    private List<Socket> listadoClientes;
 
 
     /**
@@ -98,11 +91,13 @@ public class PrincipalSrv extends javax.swing.JFrame {
         cbEnviarTodos.setEnabled(false);
         new Thread(new Runnable() {
             public void run() {
-                try {
-                    listadoClientes = new ArrayList<>();
+                try 
+                {
+                    Set<Socket> listadoClientes = Collections.synchronizedSet(new HashSet<>());
                     InetAddress addr = InetAddress.getLocalHost();
                     int puerto = PORT;
-                    if(cbEnviarTodos.isSelected()){
+                    if(cbEnviarTodos.isSelected())
+                    {
                         puerto +=1; 
                     }
                     serverSocket = new ServerSocket( puerto);
@@ -110,25 +105,20 @@ public class PrincipalSrv extends javax.swing.JFrame {
                     while (true) {
                         Socket clientSocket = serverSocket.accept();
                         listadoClientes.add(clientSocket);
+                        System.out.println(listadoClientes.size());
                         new Thread(new Runnable(){
                             public void run(){
                                 try
                                 {
                                     mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
-                                    
                                     if(cbEnviarTodos.isSelected())
                                     {
-                                        for(Socket remitentes : listadoClientes)
-                                        {
-                                            BufferedReader in_cr = new BufferedReader(new InputStreamReader(remitentes.getInputStream()));
-                                            enviarMensajeTodos(in_cr, remitentes);
-                                        }
+                                        
+                                        enviarMensajeTodos(clientSocket);
                                     }
                                     else
                                     {
-                                        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                                        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                                        enviarMensaje(in, out, clientSocket);
+                                        enviarMensaje(clientSocket);
                                     }
                                 } 
                                 catch(IOException ex)
@@ -152,21 +142,31 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                 }
                             }
 
-                            private void enviarMensajeTodos(BufferedReader in, Socket remitente) throws IOException {
+                            private void enviarMensajeTodos(Socket remitente) throws IOException {
                                 String linea;
-                                while ((linea = in.readLine()) != null) {
+                                BufferedReader in = new BufferedReader(new InputStreamReader(remitente.getInputStream()));
+                                while ((linea = in.readLine()) != null) 
+                                {
                                     mensajesTxt.append("Cliente "+ remitente.getPort() + ": " + linea + "\n");
                                     
-                                    for(Socket destinatario : listadoClientes){
-                                        PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
-                                        out_d.println("Cliente "+ remitente.getPort() + ": " + linea + "");
+                                    for(Socket destinatario : listadoClientes)
+                                    {
+                                        if(destinatario != remitente)
+                                        {
+                                            PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
+                                            out_d.println("Cliente "+ remitente.getPort() + ": " + linea + "");
+                                        }   
                                     }
                                     
                                 }
                             }
+                            
+                            
 
-                            private void enviarMensaje(BufferedReader in, PrintWriter out, Socket cliente) throws IOException {
+                            private void enviarMensaje(Socket cliente) throws IOException {
                                 String linea;
+                                BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
+                                PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                 while ((linea = in.readLine()) != null) {
                                     mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
                                     out.println("Cliente "+ cliente.getPort() + ": " + linea + "");
@@ -180,7 +180,6 @@ public class PrincipalSrv extends javax.swing.JFrame {
                     cbEnviarTodos.setEnabled(true);
                     mensajesTxt.append("Error en el servidor: " + ex.getMessage() + "\n");
                     ex.printStackTrace();
-                    
                 }
             }
         }).start();
