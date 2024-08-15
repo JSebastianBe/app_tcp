@@ -15,6 +15,10 @@ public class App_tcp {
      */
     public static void main(String[] args) {
         System.out.println("Hola manpinta");
+        String Linea = "Hola:12345";
+        
+        String[] mensaje = Linea.split(":");
+        System.out.println(mensaje[0]);
     }
     
 }

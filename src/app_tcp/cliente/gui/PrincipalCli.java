@@ -45,6 +45,9 @@ public class PrincipalCli extends javax.swing.JFrame {
         cPorts = new javax.swing.JComboBox<String>();
         jLabel3 = new javax.swing.JLabel();
         
+        jLabel4 = new javax.swing.JLabel();
+        destinatarioTxt = new javax.swing.JTextField();
+        
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
 
@@ -86,14 +89,24 @@ public class PrincipalCli extends javax.swing.JFrame {
         getContentPane().add(jScrollPane1);
         jScrollPane1.setBounds(30, 210, 410, 110);
 
-        mensajeTxt.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        getContentPane().add(mensajeTxt);
-        mensajeTxt.setBounds(40, 120, 350, 30);
+        jLabel4.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        jLabel4.setText("Destinatario:");
+        getContentPane().add(jLabel4);
+        jLabel4.setBounds(20, 90, 120, 30);
+        
+        destinatarioTxt.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        getContentPane().add(destinatarioTxt);
+        destinatarioTxt.setBounds(120, 90, 270, 30);
 
+        
         jLabel2.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
         jLabel2.setText("Mensaje:");
         getContentPane().add(jLabel2);
-        jLabel2.setBounds(20, 90, 120, 30);
+        jLabel2.setBounds(20, 120, 120, 30);
+        
+        mensajeTxt.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        getContentPane().add(mensajeTxt);
+        mensajeTxt.setBounds(40, 150, 350, 30);
 
         btEnviar.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
         btEnviar.setText("Enviar");
@@ -103,7 +116,7 @@ public class PrincipalCli extends javax.swing.JFrame {
             }
         });
         getContentPane().add(btEnviar);
-        btEnviar.setBounds(327, 160, 120, 27);
+        btEnviar.setBounds(327, 180, 120, 27);
 
         setSize(new java.awt.Dimension(491, 375));
         setLocationRelativeTo(null);
@@ -137,9 +150,11 @@ public class PrincipalCli extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea mensajesTxt;
     private JTextField mensajeTxt;
+    private JTextField destinatarioTxt;
     private javax.swing.JComboBox<String> cPorts;
     // End of variables declaration
 
@@ -180,7 +195,7 @@ public class PrincipalCli extends javax.swing.JFrame {
         }
     }
     private void enviarMensaje() {
-        out.println(mensajeTxt.getText());
+        out.println(mensajeTxt.getText() + ":" + destinatarioTxt.getText());
         mensajeTxt.setText("");
 
 
