@@ -43,6 +43,7 @@ public class PrincipalCli extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         btEnviar = new javax.swing.JButton();
         cPorts = new javax.swing.JComboBox<String>();
+        jLabel3 = new javax.swing.JLabel();
         
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
@@ -57,12 +58,19 @@ public class PrincipalCli extends javax.swing.JFrame {
         getContentPane().add(bConectar);
         bConectar.setBounds(260, 40, 210, 40);
         
+        
+        jLabel3.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        jLabel3.setText("IP servidor:");
+        getContentPane().add(jLabel3);
+        jLabel3.setBounds(20, 41, 90, 30);
+        
+        
         cPorts.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cPorts.addItem("12345");
         cPorts.addItem("12346");
         cPorts.addItem("12347");
         getContentPane().add(cPorts);
-        cPorts.setBounds(60, 40, 180, 40);
+        cPorts.setBounds(110, 40, 120, 40);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(204, 0, 0));
@@ -128,6 +136,7 @@ public class PrincipalCli extends javax.swing.JFrame {
     private javax.swing.JButton btEnviar;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea mensajesTxt;
     private JTextField mensajeTxt;
