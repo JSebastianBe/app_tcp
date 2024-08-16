@@ -8,6 +8,7 @@ import java.util.*;
 
 /**
  * Author: Vinni
+ * changes: JSebastianB 2024
  */
 public class PrincipalSrv extends javax.swing.JFrame {
     private ServerSocket serverSocket;
@@ -161,8 +162,8 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     } 
                                     catch(IOException ex)
                                     {
-                                        mensajesTxt.append("Error en la comunicación con el cliente: " + ex.getMessage() + "\n");
-                                        ex.printStackTrace();
+                                        /*mensajesTxt.append("Error en la comunicación con el cliente: " + ex.getMessage() + "\n");
+                                        ex.printStackTrace();*/
                                     } 
                                     finally 
                                     {
@@ -176,6 +177,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                             mensajesTxt.append("Error cerrando el socket del cliente: " + ex.getMessage() + "\n");
                                             ex.printStackTrace();
                                         } 
+                                        
                                         listadoClientes.remove(clientSocket);
                                     }
                                 }
@@ -234,7 +236,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     String linea;
                                     BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
                                     PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
-                                    while ((linea = in.readLine()) != null) {
+                                    while (!cliente.isClosed() && cliente.isConnected() && (linea = in.readLine()) != null) {
                                         String mensaje = linea.split(":")[0];
                                         mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
                                         out.println("Cliente "+ cliente.getPort() + ": " + mensaje + "");

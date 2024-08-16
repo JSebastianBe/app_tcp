@@ -9,6 +9,7 @@ import java.net.Socket;
 
 /**
  * author: Vinni 2024
+ * changes: JSebastianB 2024
  */
 public class PrincipalCli extends javax.swing.JFrame {
 
@@ -94,22 +95,25 @@ public class PrincipalCli extends javax.swing.JFrame {
         getContentPane().add(jLabel4);
         jLabel4.setBounds(20, 90, 120, 30);
         
-        destinatarioTxt.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        destinatarioTxt.setFont(new java.awt.Font("Verdana", 0, 14));
+        destinatarioTxt.setEnabled(false);
         getContentPane().add(destinatarioTxt);
         destinatarioTxt.setBounds(120, 90, 270, 30);
 
         
-        jLabel2.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Verdana", 0, 14)); 
         jLabel2.setText("Mensaje:");
         getContentPane().add(jLabel2);
         jLabel2.setBounds(20, 120, 120, 30);
         
-        mensajeTxt.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        mensajeTxt.setFont(new java.awt.Font("Verdana", 0, 14)); 
+        mensajeTxt.setEnabled(false);
         getContentPane().add(mensajeTxt);
         mensajeTxt.setBounds(40, 150, 350, 30);
 
         btEnviar.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
         btEnviar.setText("Enviar");
+        btEnviar.setEnabled(false);
         btEnviar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btEnviarActionPerformed(evt);
@@ -170,6 +174,9 @@ public class PrincipalCli extends javax.swing.JFrame {
             }
             bConectar.setEnabled(false);
             cPorts.setEnabled(false);
+            mensajeTxt.setEnabled(true);
+            destinatarioTxt.setEnabled(true);
+            btEnviar.setEnabled(true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             new Thread(new Runnable() {
                 public void run() {
@@ -182,7 +189,23 @@ public class PrincipalCli extends javax.swing.JFrame {
                     catch (IOException ex) 
                     {
                         mensajesTxt.append("Error en la comunicación con el servidor: " + ex.getMessage() + "\n");
-                        ex.printStackTrace();
+                        mensajeTxt.setEnabled(false);
+                        destinatarioTxt.setEnabled(false);
+                        cPorts.setEnabled(true);
+                        bConectar.setEnabled(true);
+                        btEnviar.setEnabled(false);
+                        
+                    }
+                    finally{
+                        try
+                        {
+                            socket.close();
+                        }
+                        catch(IOException ex)
+                        {
+                            mensajesTxt.append("Error cerrando el socket del cliente: " + ex.getMessage() + "\n");
+                            ex.printStackTrace();
+                        } 
                     }
                 }
             }).start();
@@ -191,6 +214,9 @@ public class PrincipalCli extends javax.swing.JFrame {
             mensajesTxt.append("No se puede conectar al servidor: " + HOST + ":"+ puerto + ". " + ex.getMessage() + "\n");
             cPorts.setEnabled(true);
             bConectar.setEnabled(true);
+            mensajeTxt.setEnabled(false);
+            destinatarioTxt.setEnabled(false);
+            btEnviar.setEnabled(false);
             ex.printStackTrace();
         }
     }
