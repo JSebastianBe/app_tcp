@@ -2,10 +2,14 @@ package app_tcp.cliente.gui;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.Socket;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * author: Vinni 2024
@@ -18,6 +22,7 @@ public class PrincipalCli extends javax.swing.JFrame {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
+    private DataOutputStream dos;
 
     /**
      * Creates new form Principal1
@@ -169,12 +174,13 @@ public class PrincipalCli extends javax.swing.JFrame {
             {
                 socket = new Socket(HOST, puerto); // Asume que el servidor está en localhost y escucha en el puerto 5555
                 out = new PrintWriter(socket.getOutputStream(), true);
+                dos = new DataOutputStream(socket.getOutputStream());
                 mensajesTxt.append("Conectado al servidor: " + socket.getInetAddress() + ":"+ socket.getPort() +"\n");
                 jLabel1.setText("CLIENTE TCP : " + socket.getLocalPort());
             }
             bConectar.setEnabled(false);
             cPorts.setEnabled(false);
-            mensajeTxt.setEnabled(true);
+            //mensajeTxt.setEnabled(true);
             destinatarioTxt.setEnabled(true);
             btEnviar.setEnabled(true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -221,10 +227,59 @@ public class PrincipalCli extends javax.swing.JFrame {
         }
     }
     private void enviarMensaje() {
-        out.println(mensajeTxt.getText() + ":" + destinatarioTxt.getText());
-        mensajeTxt.setText("");
+        File file = SeleccionarArchivo();
+        out.println(destinatarioTxt.getText() + ":" + file.getName());
+        //enviarArchivo(file);
+        //mensajeTxt.setText("");
+    }
+    
+    
+    private File SeleccionarArchivo() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 
+        FileNameExtensionFilter imgFilter = new FileNameExtensionFilter("Archivos de texto", "txt", "log", "csv", "cus", "dodo"); 
+        fileChooser.setFileFilter(imgFilter);
 
+        int result = fileChooser.showOpenDialog(this);
 
+        if (result != JFileChooser.CANCEL_OPTION) {
+
+            File archivo = fileChooser.getSelectedFile();
+
+            if ((archivo == null) || (archivo.getName().equals(""))) {
+                mensajeTxt.setText("...");
+                return null;
+            } else {
+                mensajeTxt.setText(archivo.getAbsolutePath());
+                return archivo;
+            }
+        }
+        return null;
+    }
+    
+    private void enviarArchivo(File archivo) {
+        try
+        {
+            FileInputStream fis = new FileInputStream(archivo.getAbsolutePath());
+            long fileSize = archivo.length();
+            // Enviar el tamaño del archivo primero
+            dos.writeLong(fileSize);
+            
+            // Enviar el archivo en bloques
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) 
+            {
+                dos.write(buffer, 0, bytesRead);
+            }
+
+            System.out.println("Archivo enviado.");
+        }
+        catch(IOException e){
+            System.out.println("Error enviando archivo " + e.getMessage());
+            e.printStackTrace();
+        }
+        
     }
 }

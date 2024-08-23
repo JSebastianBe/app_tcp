@@ -158,6 +158,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                         else
                                         {
                                             enviarMensaje(clientSocket);
+                                            
                                         }
                                     } 
                                     catch(IOException ex)
@@ -237,10 +238,38 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
                                     PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                     while (!cliente.isClosed() && cliente.isConnected() && (linea = in.readLine()) != null) {
-                                        String mensaje = linea.split(":")[0];
+                                        String destinatario = linea.split(":")[0];
+                                        String nombreArchivo = linea.split(":")[1];
                                         mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
-                                        out.println("Cliente "+ cliente.getPort() + ": " + mensaje + "");
+                                        /*
+                                        // Manejo del archivo entrante
+                                        try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                                             FileOutputStream fos = new FileOutputStream("archivo_recibido.txt")) {
+
+                                            // Leer el tamaño del archivo
+                                            long fileSize = dis.readLong();
+                                            byte[] buffer = new byte[4096];
+                                            int bytesRead;
+                                            long totalBytesRead = 0;
+
+                                            // Leer el archivo en bloques
+                                            while ((bytesRead = dis.read(buffer, 0, buffer.length)) != -1) {
+                                                fos.write(buffer, 0, bytesRead);
+                                                totalBytesRead += bytesRead;
+                                                if (totalBytesRead >= fileSize) {
+                                                    break;
+                                                }
+                                            }
+
+                                            System.out.println("Archivo recibido y guardado.");
+                                        } catch (IOException e) {
+                                            System.err.println("Error al recibir el archivo: " + e.getMessage());
+                                        }*/
+                                            
+                                        out.println("Cliente: "+ cliente.getPort() + "|| Arcvhivo: " + nombreArchivo + " || Destinatario: " + destinatario);
                                     }
+                                    
+                                    
                                 }
                             }).start();
 
