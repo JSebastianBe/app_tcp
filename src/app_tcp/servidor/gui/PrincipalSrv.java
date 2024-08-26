@@ -205,7 +205,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                                 String nombreArchivoCompleto = AgregaPath(nombreArchivo);
                                                 RecibeArchivos(remitente, nombreArchivoCompleto, fileSize);    
                                                 out.println("Cliente "+ remitente.getPort() + ": " + "|" + nombreArchivo + "|" + fileSize);
-                                                EnviaArchivos(remitente, nombreArchivoCompleto, fileSize);
+                                                EnviaArchivos(destinatario, nombreArchivoCompleto, fileSize);
                                             }   
                                         }
 
