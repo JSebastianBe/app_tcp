@@ -232,7 +232,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                                 nombreArchivo = GeneraNombreArchivo(nombreArchivoViejo, remitente, destinatario.getPort() + "");
                                            
                                                 out.println("Cliente "+ remitente.getPort() + ": " + "|" + nombreArchivo + "|" + fileSize);
-                                                EnviaArchivos(remitente, nombreArchivoCompleto, fileSize);
+                                                EnviaArchivos(destinatario, nombreArchivoCompleto, fileSize);
                                             }
                                         }
                                         
