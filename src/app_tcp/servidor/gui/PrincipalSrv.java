@@ -149,12 +149,12 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                         mensajesTxt.append("Cliente conectado: " + clientSocket.getPort()+ "\n");
                                         if(cbEnviarTodos.isSelected())
                                         {
-                                            enviarInfoTodos("Cliente conectado: " + clientSocket.getPort(), clientSocket);
+                                            enviarInfoTodos("Cliente conectado: " + clientSocket.getPort() + "||0", clientSocket);
                                             enviarMensajeTodos(clientSocket);
                                         }
                                         else if(cbEnviarDirecto.isSelected())
                                         {
-                                            enviarInfoTodos("Cliente conectado: " + clientSocket.getPort(), clientSocket);
+                                            enviarInfoTodos("Cliente conectado: " + clientSocket.getPort() + "||0", clientSocket);
                                             enviarMensajeDirecto(clientSocket);
                                         }
                                         else
@@ -189,15 +189,23 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     BufferedReader in = new BufferedReader(new InputStreamReader(remitente.getInputStream()));
                                     while ((linea = in.readLine()) != null) 
                                     {
-                                        mensajesTxt.append("Cliente "+ remitente.getPort() + ": " + linea + "\n");
-                                        String mensaje = linea.split(":")[0];
-                                        int puerto = Integer.valueOf(linea.split(":")[1]);
+                                        
+                                        String destinatarioIP = linea.split("\\|")[0];
+                                        String nombreArchivoViejo = linea.split("\\|")[1];
+                                        Long fileSize = Long.valueOf(linea.split("\\|")[2]);
+                                        mensajesTxt.append("Cliente: "+ remitente.getPort() + "|| Arcvhivo: " + nombreArchivoViejo + " || Destinatario: " + destinatarioIP + "\n");
+
                                         for(Socket destinatario : listadoClientes)
                                         {
-                                            if(destinatario.getPort() == puerto)
+                                            if(destinatario.getPort() == Integer.valueOf(destinatarioIP))
                                             {
-                                                PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
-                                                out_d.println("Cliente "+ remitente.getPort() + ": " + mensaje + "");
+                                                PrintWriter out = new PrintWriter(destinatario.getOutputStream(), true);
+                                                
+                                                String nombreArchivo = GeneraNombreArchivo(nombreArchivoViejo, remitente, destinatario.getPort() + "");
+                                                String nombreArchivoCompleto = AgregaPath(nombreArchivo);
+                                                RecibeArchivos(remitente, nombreArchivoCompleto, fileSize);    
+                                                out.println("Cliente "+ remitente.getPort() + ": " + "|" + nombreArchivo + "|" + fileSize);
+                                                EnviaArchivos(remitente, nombreArchivoCompleto, fileSize);
                                             }   
                                         }
 
@@ -209,17 +217,25 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     BufferedReader in = new BufferedReader(new InputStreamReader(remitente.getInputStream()));
                                     while ((linea = in.readLine()) != null) 
                                     {
-                                        mensajesTxt.append("Cliente "+ remitente.getPort() + ": " + linea + "\n");
-                                        String mensaje = linea.split(":")[0];
+                                        String destinatarioIP = linea.split("\\|")[0];
+                                        String nombreArchivoViejo = linea.split("\\|")[1];
+                                        Long fileSize = Long.valueOf(linea.split("\\|")[2]);
+                                        mensajesTxt.append("Cliente: "+ remitente.getPort() + "|| Arcvhivo: " + nombreArchivoViejo + " || Destinatario: " + destinatarioIP + "\n");
+                                        String nombreArchivo = GeneraNombreArchivo(nombreArchivoViejo, remitente, destinatarioIP);
+                                        String nombreArchivoCompleto = AgregaPath(nombreArchivo);
+                                        RecibeArchivos(remitente, nombreArchivoCompleto, fileSize);    
                                         for(Socket destinatario : listadoClientes)
                                         {
                                             if(destinatario != remitente)
                                             {
-                                                PrintWriter out_d = new PrintWriter(destinatario.getOutputStream(), true);
-                                                out_d.println("Cliente "+ remitente.getPort() + ": " + mensaje + "");
-                                            }   
+                                                PrintWriter out = new PrintWriter(destinatario.getOutputStream(), true);
+                                                nombreArchivo = GeneraNombreArchivo(nombreArchivoViejo, remitente, destinatario.getPort() + "");
+                                           
+                                                out.println("Cliente "+ remitente.getPort() + ": " + "|" + nombreArchivo + "|" + fileSize);
+                                                EnviaArchivos(remitente, nombreArchivoCompleto, fileSize);
+                                            }
                                         }
-
+                                        
                                     }
                                 }
 
@@ -238,8 +254,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     String linea;
                                     BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
                                     PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
-                                    while (!cliente.isClosed() && cliente.isConnected() && (linea = in.readLine()) != null) {
-                                        System.out.println(linea);
+                                    while (!cliente.isClosed() && cliente.isConnected() && (linea = in.readLine()) != null) {                                     
                                         String destinatario = linea.split("\\|")[0];
                                         String nombreArchivoViejo = linea.split("\\|")[1];
                                         Long fileSize = Long.valueOf(linea.split("\\|")[2]);

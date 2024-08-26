@@ -11,9 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.Socket;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -200,9 +197,14 @@ public class PrincipalCli extends javax.swing.JFrame {
                             String mensaje = linea.split("\\|")[0];
                             String nombreArchivo = linea.split("\\|")[1];
                             Long fileSize = Long.valueOf(linea.split("\\|")[2]);
-                            mensajesTxt.append("Servidor: " + mensaje + "|| " + nombreArchivo + "\n");
-                            nombreArchivo = GeneraNombreArchivo(nombreArchivo);
-                            RecibeArchivos(nombreArchivo, fileSize); 
+                            if(fileSize > 0)
+                            {
+                                mensajesTxt.append("Servidor: " + mensaje + "|| " + nombreArchivo + "\n");
+                                nombreArchivo = GeneraNombreArchivo(nombreArchivo);
+                                RecibeArchivos(nombreArchivo, fileSize); 
+                            }else{
+                                mensajesTxt.append("Servidor: " + mensaje + "\n");
+                            }
                             
                         }
                     } 
@@ -329,7 +331,6 @@ public class PrincipalCli extends javax.swing.JFrame {
             long totalBytesRead = 0;
             while ((bytesRead = dis.read(buffer, 0, buffer.length)) != -1)
             {
-                System.out.println("Escribe: " + bytesRead);
                 fos.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
                 if (totalBytesRead >= fileSize)
