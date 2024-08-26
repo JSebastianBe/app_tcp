@@ -2,13 +2,18 @@ package app_tcp.cliente.gui;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -23,6 +28,7 @@ public class PrincipalCli extends javax.swing.JFrame {
     private PrintWriter out;
     private BufferedReader in;
     private DataOutputStream dos;
+    private DataInputStream dis;
 
     /**
      * Creates new form Principal1
@@ -146,6 +152,7 @@ public class PrincipalCli extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         /* Create and display the form */
+        System.out.println("--------------- Inicio log de cliente");
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new PrincipalCli().setVisible(true);
@@ -169,7 +176,8 @@ public class PrincipalCli extends javax.swing.JFrame {
 
     private void conectar() {
         int puerto = Integer.valueOf(cPorts.getSelectedItem().toString());
-        try {
+        try 
+        {
             if (socket == null || socket.isClosed()) 
             {
                 socket = new Socket(HOST, puerto); // Asume que el servidor está en localhost y escucha en el puerto 5555
@@ -180,16 +188,22 @@ public class PrincipalCli extends javax.swing.JFrame {
             }
             bConectar.setEnabled(false);
             cPorts.setEnabled(false);
-            //mensajeTxt.setEnabled(true);
             destinatarioTxt.setEnabled(true);
             btEnviar.setEnabled(true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        String fromServer;
-                        while ((fromServer = in.readLine()) != null) {
-                            mensajesTxt.append("Servidor: " + fromServer + "\n");
+                        String linea;
+                        while ((linea = in.readLine()) != null) {
+                            System.out.println(linea);
+                            String mensaje = linea.split("\\|")[0];
+                            String nombreArchivo = linea.split("\\|")[1];
+                            Long fileSize = Long.valueOf(linea.split("\\|")[2]);
+                            mensajesTxt.append("Servidor: " + mensaje + "|| " + nombreArchivo + "\n");
+                            nombreArchivo = GeneraNombreArchivo(nombreArchivo);
+                            RecibeArchivos(nombreArchivo, fileSize); 
+                            
                         }
                     } 
                     catch (IOException ex) 
@@ -215,8 +229,8 @@ public class PrincipalCli extends javax.swing.JFrame {
                     }
                 }
             }).start();
-            System.out.println(out);
-        }catch (IOException ex){
+        }
+        catch (IOException ex){
             mensajesTxt.append("No se puede conectar al servidor: " + HOST + ":"+ puerto + ". " + ex.getMessage() + "\n");
             cPorts.setEnabled(true);
             bConectar.setEnabled(true);
@@ -228,9 +242,11 @@ public class PrincipalCli extends javax.swing.JFrame {
     }
     private void enviarMensaje() {
         File file = SeleccionarArchivo();
-        out.println(destinatarioTxt.getText() + ":" + file.getName());
-        //enviarArchivo(file);
-        //mensajeTxt.setText("");
+        if(file != null){
+            long fileSize = file.length();
+            out.println(destinatarioTxt.getText() + "|" + file.getName() + "|" + fileSize);
+            EnviarArchivo(file);
+        }
     }
     
     
@@ -258,28 +274,74 @@ public class PrincipalCli extends javax.swing.JFrame {
         return null;
     }
     
-    private void enviarArchivo(File archivo) {
+    private String GeneraNombreArchivo(String nombreArchivo) {                            
+        String path = "LogsCliente/";
+        
+        File dir = new File(path);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        
+        String nombre = nombreArchivo.split("\\.")[0];
+        String extension = nombreArchivo.split("\\.")[1];
+        nombreArchivo = path + nombre + "." + extension;
+        return nombreArchivo;
+    }
+    
+    private void EnviarArchivo(File archivo) {
         try
         {
             FileInputStream fis = new FileInputStream(archivo.getAbsolutePath());
             long fileSize = archivo.length();
-            // Enviar el tamaño del archivo primero
-            dos.writeLong(fileSize);
-            
             // Enviar el archivo en bloques
             byte[] buffer = new byte[4096];
             int bytesRead;
+            long totalBytesSent = 0;
             while ((bytesRead = fis.read(buffer)) != -1) 
             {
                 dos.write(buffer, 0, bytesRead);
+                totalBytesSent += bytesRead;
+                // Detener cuando se haya enviado todo el archivo
+                if (totalBytesSent >= fileSize) {
+                    break;
+                }
             }
 
-            System.out.println("Archivo enviado.");
+            dos.flush();
+            fis.close();
+            System.out.println("Archivo enviado: " + archivo.getAbsolutePath());
         }
         catch(IOException e){
-            System.out.println("Error enviando archivo " + e.getMessage());
+            System.err.println("Error enviando archivo " + e.getMessage());
             e.printStackTrace();
         }
         
+    }
+    
+    private void RecibeArchivos(String nombreArchivo, long fileSize) {
+        try
+        {
+            dis = new DataInputStream(socket.getInputStream());
+            FileOutputStream fos = new FileOutputStream(nombreArchivo);
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            long totalBytesRead = 0;
+            while ((bytesRead = dis.read(buffer, 0, buffer.length)) != -1)
+            {
+                System.out.println("Escribe: " + bytesRead);
+                fos.write(buffer, 0, bytesRead);
+                totalBytesRead += bytesRead;
+                if (totalBytesRead >= fileSize)
+                {
+                    break;
+                }
+            }
+            fos.close();
+            System.out.println("Archivo recibido y guardado en: " + nombreArchivo);
+        } 
+        catch (IOException e) {
+            System.err.println("Error al recibir el archivo: " + e.getMessage());
+        }
     }
 }

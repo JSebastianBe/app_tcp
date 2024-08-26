@@ -4,6 +4,8 @@ package app_tcp.servidor.gui;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -93,6 +95,7 @@ public class PrincipalSrv extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         /* Create and display the form */
+        System.out.println("--------------- Inicio log de servidor");
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new PrincipalSrv().setVisible(true);
@@ -139,7 +142,6 @@ public class PrincipalSrv extends javax.swing.JFrame {
                         while (true) {
                             Socket clientSocket = serverSocket.accept();
                             listadoClientes.add(clientSocket);
-                            System.out.println(listadoClientes.size());
                             new Thread(new Runnable(){
                                 public void run(){
                                     try
@@ -158,7 +160,6 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                         else
                                         {
                                             enviarMensaje(clientSocket);
-                                            
                                         }
                                     } 
                                     catch(IOException ex)
@@ -238,39 +239,95 @@ public class PrincipalSrv extends javax.swing.JFrame {
                                     BufferedReader in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
                                     PrintWriter out = new PrintWriter(cliente.getOutputStream(), true);
                                     while (!cliente.isClosed() && cliente.isConnected() && (linea = in.readLine()) != null) {
-                                        String destinatario = linea.split(":")[0];
-                                        String nombreArchivo = linea.split(":")[1];
-                                        mensajesTxt.append("Cliente "+ cliente.getPort() + ": " + linea + "\n");
-                                        /*
-                                        // Manejo del archivo entrante
-                                        try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                                             FileOutputStream fos = new FileOutputStream("archivo_recibido.txt")) {
-
-                                            // Leer el tamaño del archivo
-                                            long fileSize = dis.readLong();
-                                            byte[] buffer = new byte[4096];
-                                            int bytesRead;
-                                            long totalBytesRead = 0;
-
-                                            // Leer el archivo en bloques
-                                            while ((bytesRead = dis.read(buffer, 0, buffer.length)) != -1) {
-                                                fos.write(buffer, 0, bytesRead);
-                                                totalBytesRead += bytesRead;
-                                                if (totalBytesRead >= fileSize) {
-                                                    break;
-                                                }
-                                            }
-
-                                            System.out.println("Archivo recibido y guardado.");
-                                        } catch (IOException e) {
-                                            System.err.println("Error al recibir el archivo: " + e.getMessage());
-                                        }*/
-                                            
-                                        out.println("Cliente: "+ cliente.getPort() + "|| Arcvhivo: " + nombreArchivo + " || Destinatario: " + destinatario);
+                                        System.out.println(linea);
+                                        String destinatario = linea.split("\\|")[0];
+                                        String nombreArchivoViejo = linea.split("\\|")[1];
+                                        Long fileSize = Long.valueOf(linea.split("\\|")[2]);
+                                        mensajesTxt.append("Cliente: "+ cliente.getPort() + "|| Arcvhivo: " + nombreArchivoViejo + " || Destinatario: " + destinatario + "\n");
+                                        String nombreArchivo = GeneraNombreArchivo(nombreArchivoViejo, cliente, destinatario);
+                                        String nombreArchivoCompleto = AgregaPath(nombreArchivo);
+                                        RecibeArchivos(cliente, nombreArchivoCompleto, fileSize);    
+                                        out.println("Cliente "+ cliente.getPort() + ": " + "|" + nombreArchivo + "|" + fileSize);
+                                        EnviaArchivos(cliente, nombreArchivoCompleto, fileSize);
+                                        
                                     }
                                     
                                     
                                 }
+
+                                private String GeneraNombreArchivo(String nombreArchivo, Socket cliente, String destinatario) {
+                                    DateFormat dateFormat = new SimpleDateFormat("HHmmss");
+                                    Date date = new Date();
+                                    String nombre = nombreArchivo.split("\\.")[0];
+                                    String extension = nombreArchivo.split("\\.")[1];
+                                    nombreArchivo = cliente.getPort() + "_" + destinatario + "_" + dateFormat.format(date) + "_" + nombre + "." + extension;
+                                    return nombreArchivo;
+                                }
+                                
+                                private String AgregaPath(String nombreArchivo){
+                                    String path = "LogsServidor/";
+                                    File dir = new File(path);
+                                    if (!dir.exists()) {
+                                        dir.mkdirs();
+                                    }
+                                    
+                                    nombreArchivo = path + nombreArchivo;
+                                    return nombreArchivo;
+                                }
+
+                                private void RecibeArchivos(Socket cliente, String nombreArchivo, long fileSize) {
+                                    try
+                                    {
+                                        DataInputStream dis = new DataInputStream(cliente.getInputStream());
+                                        FileOutputStream fos = new FileOutputStream(nombreArchivo);
+                                        
+                                        byte[] buffer = new byte[4096];
+                                        int bytesRead;
+                                        long totalBytesRead = 0;
+                                        while ((bytesRead = dis.read(buffer, 0, buffer.length)) != -1)
+                                        {
+                                            fos.write(buffer, 0, bytesRead);
+                                            totalBytesRead += bytesRead;
+                                            if (totalBytesRead >= fileSize)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        fos.close();
+                                        System.out.println("Archivo recibido y guardado en: " + nombreArchivo);
+                                    } 
+                                    catch (IOException e) {
+                                        System.err.println("Error al recibir el archivo: " + e.getMessage());
+                                    }
+                                }
+                                
+                                private void EnviaArchivos(Socket cliente, String nombreArchivo, long fileSize ) {
+                                    try
+                                    {
+                                        DataOutputStream dos = new DataOutputStream(cliente.getOutputStream());
+                                        FileInputStream fis = new FileInputStream(nombreArchivo);   
+                                        // Enviar el archivo en bloques
+                                        byte[] buffer = new byte[4096];
+                                        int bytesRead;
+                                        long totalBytesSent = 0;
+                                        while ((bytesRead = fis.read(buffer)) != -1) 
+                                        {
+                                            dos.write(buffer, 0, bytesRead);
+                                            totalBytesSent += bytesRead;
+                                            // Detener cuando se haya enviado todo el archivo
+                                            if (totalBytesSent >= fileSize) {
+                                                break;
+                                            }
+                                        }
+                                        dos.flush();
+                                        fis.close();
+                                        System.out.println("Archivo enviado: " + nombreArchivo);
+                                        
+                                    } catch (IOException e) {
+                                        System.err.println("Error al recibir el archivo: " + e.getMessage());
+                                    }
+                                }
+                                
                             }).start();
 
                         }
